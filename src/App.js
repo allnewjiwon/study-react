@@ -1,6 +1,7 @@
 import React from 'react';
 import { useState } from 'react';
 import './App.css';
+import { func } from 'prop-types';
 
 function App() {
   // let [posttitle, setPosttitle] = useState('남자코트추천');
@@ -16,12 +17,29 @@ function App() {
     '강남우동맛집',
     '파이썬독학',
   ]);
-  // 1. 객체에서 배열의 count를 순서대로 가져와서 값을 변경시키거나
-  // 2. 각 count값을 하나씩 useState로 컨트롤 하거나
-  let [count, setCount] = useState([0, 0, 0]);
 
+  let [count, setCount] = useState([0, 0, 0]);
+  // let [newCount, setNewCount] = useState(0);
+  let [color, setColor] = useState('#fff');
   let [modal, setModal] = useState(false);
-  // let [count, setCount] = useState(0);
+  let [title, setTitle] = useState(0);
+  let [input, setInput] = useState('');
+
+  /**!!!!!!!!!!!!!!미해결!!!!!!!!!!!!!!
+   * 방법 찾아볼 것!!!!!!!!!!!!!!!!!!!!!**/
+  function ccModal() {
+    let idx = 0;
+    let colorArr = ['#f12', '#afa', '#faf'];
+
+    setInterval(() => {
+      if (idx >= colorArr.length) {
+        clearInterval();
+      } else {
+        setColor(colorArr[idx]);
+        idx++;
+      }
+    }, 1000);
+  }
 
   function sort() {
     let copy = [...posttitles];
@@ -63,7 +81,6 @@ function App() {
     let copy = [...count];
     copy[i] = copy[i] + 1;
     setCount(copy);
-    console.log(copy[0]);
     /**
      * setCount((count[i] += 1))의 경우
      * state값을 직접적으로 변경하는 값이 되므로
@@ -73,16 +90,82 @@ function App() {
      * 계산할 수 있게끔.
      * **/
   }
-  // ==
-  // setCount((prevCount, i) => {
-  //   const newCount = [...prevCount];
-  //   newCount[i] += 1;
-  //   return newCount;
-  // });
+
+  const onReset = () => {
+    setInput('');
+  };
+  const onChange = (e) => {
+    setInput(e.target.value);
+    // if (e.target.value === '') {
+    //   setInput(e.target.value);
+    // } else {
+    //   onReset();
+    // }
+
+    // if (e.target.value === '') {
+    //   e.preventDefault();
+    //   alert('발행할 글을 입력하세요');
+    // } else {
+    //   setInput(e.target.value);
+    // }
+  };
+
+  function addList(e) {
+    // 클릭 시 리스트가 더해지게 만들거임
+    // button에 들어가야함
+    /**
+     * 24.01.05
+     * unshift()
+     * arr.unshift(요소1, 요소2, 요소3);
+     * arr에 요소1, 요소2, 요소3이 추가된다.
+     * **/
+
+    // 리스트 추가될 때 이미 업뎃된 count 값이 같이 업데이트 되는디????
+
+    let copy = [...posttitles];
+    let copyCount = [...count];
+
+    // setPosttitle(copy) => 업데이트 된 상태의 copy가 setPosttitle에 전달됨
+
+    onReset();
+    if (input == '') {
+      e.preventDefault();
+      alert('발행할 글을 입력하세요');
+    } else {
+      copy.unshift(input);
+      let shiftCount = copyCount.unshift(count);
+      setPosttitle(copy);
+      // setCounter(copyCount);
+      setCount(copyCount);
+      console.log(shiftCount);
+    }
+  }
+
+  // function addCount() {
+  //   let copy = [...count];
+
+  //   setCount(copy);
+  // }
 
   function modalOnOff() {
     // modal == false ? setModal(true) : setModal(false);
     setModal(!modal);
+  }
+
+  const enter = (e) => {
+    if (e.keyCode === 13) {
+      addList(e);
+    }
+  };
+
+  function deleteList(i) {
+    let copy = [...posttitles];
+    /**
+     * splice(제거 또는 삽입할 배열의 인덱스 값, 제거할 배열의 갯수,
+     * (배열에 추가할 요소1), (배열에 추가할 요소2))
+     * **/
+    copy.splice(i, 1);
+    setPosttitle(copy);
   }
 
   return (
@@ -118,62 +201,117 @@ function App() {
         )
       
        */}
+
+      <List
+        posttitles={posttitles}
+        count={count}
+        setCounter={setCounter}
+        modalOnOff={modalOnOff}
+        setTitle={setTitle}
+        deleteList={deleteList}
+      />
+      <button onClick={setTitles}>타이틀 바꾸기</button>
+      {/* <button onClick={setCounter}>좋아요</button> */}
+      <button onClick={sort}>정렬버튼</button>
+      <button onClick={modalOnOff}>모달창띄우기</button>
+      <h4>{posttitles[0]}</h4>
+      {/* 부모 컴포넌트인 App의 state인 postitles를 
+      자식 컴포넌트인 Modal에게 props라는 파라미터로
+      전송해서 자식요소가 사용할 수 있도록 한다. 
+      이 때 state 말고도 일반 변수 혹은 함수 전송도 가능하다.*/}
+      {modal == true ? (
+        <Modal
+          posttitles={posttitles}
+          setTitles={setTitles}
+          colorArr={ccModal}
+          title={title}
+        />
+      ) : null}
+      <input
+        className="input"
+        onChange={onChange}
+        value={input}
+        onKeyDown={(e) => {
+          enter(e);
+        }}
+      ></input>
+      <button
+        className="inputBtn"
+        onClick={(e) => {
+          addList(e);
+        }}
+      >
+        글발행
+      </button>
+    </div>
+  );
+}
+
+function Modal({ posttitles, title, setTitles }) {
+  // const backgroundColor = props.ccModal;
+  return (
+    <div className="modal" style={{ background: 'skyblue' }}>
+      <h4>{posttitles[title]}</h4>
+      <p>날짜</p>
+      <p>상세내용</p>
+      <button
+        onClick={() => {
+          setTitles(['여자코트 추천'], ['강남우동맛집'], ['파이썬독학']);
+        }}
+      >
+        여기서 타이틀 바꿀거임
+      </button>
+    </div>
+  );
+}
+
+function List({
+  posttitles,
+  count,
+  setCounter,
+  modalOnOff,
+  setTitle,
+  deleteList,
+}) {
+  return (
+    <div>
       {posttitles.map((posttitle, i) => {
         return (
-          <div className="list">
-            {/* onClick={setCounter(i)} 말고 
-            onClick={() => setCounter(i)}를 사용해야 하는 이유?
-            
-            1. onClick={setCounter(i)} : 직접 함수를 호출하는 방식으로,
-            state가 업뎃되었는지 확인하지 않고 무조건 함수를 호출하므로
-            무한 루프가 발생해서 오류가 생긴다.
-
-            2. onClick={() => setCounter(i)} : 화살표 함수를 사용하면
-            렌더링 시에는 호출되지않고 함수가 필요한 시점에만(이 경우 클릭이벤트)
-            호출되기 때문에 무한루프가 발생하지 않는다. 
-            */}
-            <h4 className="title" onClick={() => setCounter(i)}>
+          <div key={i} className="list">
+            {/* onClick={setCounter(i)} 말고
+                onClick={() => setCounter(i)}를 사용해야 하는 이유?
+          
+                1. onClick={setCounter(i)} : 직접 함수를 호출하는 방식으로,
+                state가 업뎃되었는지 확인하지 않고 무조건 함수를 호출하므로
+                무한 루프가 발생해서 오류가 생긴다.
+                2. onClick={() => setCounter(i)} : 화살표 함수를 사용하면
+                렌더링 시에는 호출되지않고 함수가 필요한 시점에만(이 경우 클릭이벤트)
+                호출되기 때문에 무한루프가 발생하지 않는다.
+                */}
+            <h4
+              className="title"
+              onClick={() => {
+                setCounter(i);
+                modalOnOff();
+                setTitle(i);
+              }}
+            >
               {posttitle}
               <span>따봉</span>
               {count[i]}
             </h4>
             <p>0월 0일 발행</p>
+            <button
+              className="deleteBtn"
+              onClick={() => {
+                deleteList(i);
+              }}
+            >
+              삭제
+            </button>
           </div>
         );
       })}
-      {/* <div className="list">
-        <h4 className="title">
-          {posttitles[0]}
-          <span>따봉</span>
-          {count}
-        </h4>
-        <p>0월 0일 발행</p>
-      </div>
-      <div className="list">
-        <h4 className="title">{posttitles[1]}</h4>
-        <p>0월 0일 발행</p>
-      </div>
-      <div className="list">
-        <h4 className="title">{posttitles[2]}</h4>
-        <p>0월 0일 발행</p>
-      </div> */}
-      <button onClick={setTitles}>타이틀 바꾸기</button>
-      <button onClick={setCounter}>좋아요</button>
-      <button onClick={sort}>정렬버튼</button>
-      <button onClick={modalOnOff}>모달창띄우기</button>
-      <h4>{posttitles[0]}</h4>
-
-      {modal == true ? <Modal /> : null}
-    </div>
-  );
-}
-
-function Modal() {
-  return (
-    <div className="modal">
-      <h4>제목</h4>
-      <p>날짜</p>
-      <p>상세내용</p>
     </div>
   );
 }
